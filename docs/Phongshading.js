@@ -128,6 +128,11 @@ window.onload = function() {
 	var planeTexImage = document.getElementById("planeTexImage");
 	planeTexture = configureTexture(planeTexImage);
 
+	var fogColor = vec3(0.8, 0.83, 0.86);
+	gl.uniform3fv(gl.getUniformLocation(program, "fogColor"), flatten(fogColor));
+	gl.uniform1f(gl.getUniformLocation(program, "fogStart"), 5.0);
+	gl.uniform1f(gl.getUniformLocation(program, "fogEnd"), 30.0);
+
 	configurePhongModelMeterialParameters(program); 	
 	//生成立方体纹理对象并设置属性
 	configureCubeMap(program);

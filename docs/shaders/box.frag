@@ -23,9 +23,21 @@ float shadowCalculation(vec4 fragPosLightSpace, vec3 normal, vec3 lightDir)
 {
     float shadow=0.0;  //非阴影
     /*TODO3: 添加阴影计算，返回1表示是阴影，返回0表示非阴影*/
+    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+    if (projCoords.z > 1.0) {
+        return 0.0; // 超出光源视锥体，不产生阴影
+    }
+
+    projCoords = projCoords * 0.5 + 0.5;
+
+    float closestDepth = texture(depthTexture, projCoords.xy).r;
+    float currentDepth = projCoords.z;
+    float bias = max(0.005 * (1.0 - dot(normal, lightDir)), 0.0005);
+
+    shadow = currentDepth - bias > closestDepth ? 1.0 : 0.0;
     
     return shadow;
-   
+
 }       
 
 void main()

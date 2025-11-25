@@ -34,18 +34,16 @@ function configureTexture(image) {
     var texture = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, texture);
     gl.texImage2D(
-        gl.TEXTURE_2D, // 指定目标为 2D 纹理
-        0,              // mipmap 等级，这里一般为 0
-        gl.RGB,         // GPU 内部格式（RGB 三通道）
-        gl.RGB,         // 源图像格式（image 也是 RGB）
-        gl.UNSIGNED_BYTE, // 每个通道使用 0–255 整数
-        image           // 最终上传的图片对象（Image / Canvas / Video）
+        gl.TEXTURE_2D, 
+        0,              
+        gl.RGB,         
+        gl.RGB,         
+        gl.UNSIGNED_BYTE, 
+        image           
     );
     gl.generateMipmap(gl.TEXTURE_2D); 
-    // 自动生成多个分辨率的 mipmap，提高缩小时渲染质量
 
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST_MIPMAP_LINEAR);
-    // 指定缩小时纹理过滤方式：使用最邻近像素 + 线性混合 mipmap
 
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
     return texture;
