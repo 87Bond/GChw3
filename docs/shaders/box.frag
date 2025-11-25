@@ -46,7 +46,12 @@ void main()
 
     /*TODO2:根据phong shading方法计算ambient,diffuse,specular*/
     vec3  ambient,diffuse,specular;
-  
+    ambient=ambientStrength*lightColor;
+    float dff=max(0.0,dot(lightDir,norm));
+    diffuse=dff*lightColor*diffuseStrength;
+    specular=lightColor*specularStrength*pow(max(dot(halfDir,norm),0.0),shininess);
+
+
   	vec3 lightReflectColor=(ambient +diffuse + specular);
 
     //判定是否阴影，并对各种颜色进行混合

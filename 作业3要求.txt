@@ -9,9 +9,6 @@ HW3: 光栅化场景渲染着色
 /*TODO2: 根据phong shading方法计算ambient,diffuse,specular*/      //在/shader/box.frag中
 /*TODO3: 添加阴影计算，返回1表示是阴影，返回0表示非阴影*/           //在/shader/box.frag中
 
-
-
-
 2）加强项10分：完成下面一个即可。
 中间立方体作为镜面，用环境纹理贴图；
 物体表面模拟出凹凸效果；
