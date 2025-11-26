@@ -17,6 +17,7 @@ uniform vec3 lightColor;//入射光颜色
 uniform sampler2D diffuseTexture;
 uniform sampler2D depthTexture;
 uniform samplerCube cubeSampler;//盒子纹理采样器
+uniform bool u_useEnvMap;
 
 
 float shadowCalculation(vec4 fragPosLightSpace, vec3 normal, vec3 lightDir)
@@ -42,37 +43,41 @@ float shadowCalculation(vec4 fragPosLightSpace, vec3 normal, vec3 lightDir)
 
 void main()
 {
-    
-    //采样纹理颜色
-    vec3 TextureColor = texture(diffuseTexture, TexCoord).xyz;
-
-    //计算光照颜色
  	vec3 norm = normalize(Normal);
-	vec3 lightDir;
-	if(u_lightPosition.w==1.0) 
-        lightDir = normalize(u_lightPosition.xyz - FragPos);
-	else lightDir = normalize(u_lightPosition.xyz);
 	vec3 viewDir = normalize(viewPos - FragPos);
-	vec3 halfDir = normalize(viewDir + lightDir);
 
+    vec3 resultColor;
+    if (u_useEnvMap) {
+        // 环境映射：反射视线，使用立方体纹理颜色
+        vec3 incident = normalize(FragPos - viewPos);
+        vec3 reflectionDir = reflect(incident, norm);
+        resultColor = texture(cubeSampler, reflectionDir).rgb;
+    } else {
+        // 计算光照颜色
+        vec3 lightDir;
+        if(u_lightPosition.w==1.0) 
+            lightDir = normalize(u_lightPosition.xyz - FragPos);
+        else lightDir = normalize(u_lightPosition.xyz);
 
-    /*TODO2:根据phong shading方法计算ambient,diffuse,specular*/
-    vec3  ambient,diffuse,specular;
-    ambient=ambientStrength*lightColor;
-    float dff=max(0.0,dot(lightDir,norm));
-    diffuse=dff*lightColor*diffuseStrength;
-    specular=lightColor*specularStrength*pow(max(dot(halfDir,norm),0.0),shininess);
+        vec3 halfDir = normalize(viewDir + lightDir);
 
+        /*TODO2:根据phong shading方法计算ambient,diffuse,specular*/
+        vec3  ambient,diffuse,specular;
+        ambient=ambientStrength*lightColor;
+        float dff=max(0.0,dot(lightDir,norm));
+        diffuse=dff*lightColor*diffuseStrength;
+        specular=lightColor*specularStrength*pow(max(dot(halfDir,norm),0.0),shininess);
 
-  	vec3 lightReflectColor=(ambient +diffuse + specular);
+        vec3 lightReflectColor=(ambient +diffuse + specular);
 
-    //判定是否阴影，并对各种颜色进行混合
-    float shadow = shadowCalculation(FragPosLightSpace, norm, lightDir);
-	
-    //vec3 resultColor =(ambient + (1.0-shadow) * (diffuse + specular))* TextureColor;
-    vec3 resultColor=(1.0-shadow/2.0)* lightReflectColor * TextureColor;
+        //判定是否阴影，并对各种颜色进行混合
+        float shadow = shadowCalculation(FragPosLightSpace, norm, lightDir);
+        
+        vec3 TextureColor = texture(diffuseTexture, TexCoord).xyz;
+        vec3 litColor=(1.0-shadow/2.0)* lightReflectColor * TextureColor;
+        resultColor = litColor;
+    }
     
     FragColor = vec4(resultColor, 1.f);
 }
-
 

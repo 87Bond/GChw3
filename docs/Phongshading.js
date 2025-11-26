@@ -30,6 +30,8 @@ var eyeFov;//透视俯仰角，越大则图的投影越小;
 
 var framebuffer, renderbuffer;
 var cubeTexture, planeTexture;
+var cubeMap;
+var useEnvMapping = false; // 切换是否对中心立方体启用环境映射
 
 // 鼠标参数
 let isLeftDragging = false;
@@ -136,9 +138,14 @@ window.onload = function() {
 	configurePhongModelMeterialParameters(program); 	
 	//生成立方体纹理对象并设置属性
 	configureCubeMap(program);
+	// 立方体贴图单独使用纹理单元2，避免与2D纹理冲突
+	gl.uniform1i(gl.getUniformLocation(program, "cubeSampler"), 2);
+	gl.activeTexture(gl.TEXTURE2);
+	gl.bindTexture(gl.TEXTURE_CUBE_MAP, cubeMap);
 
 	gl.useProgram(skyboxProgram);
 	configureCubeMap(skyboxProgram);
+	gl.uniform1i(gl.getUniformLocation(skyboxProgram, "cubeSampler"), 2);
 	initArrayBuffer(gl, skyboxProgram, flatten(points), 4, gl.FLOAT, "vPosition");
 	
 	gl.useProgram(lampPorgram);
@@ -204,12 +211,15 @@ function render(){
 	gl.uniform3fv( gl.getUniformLocation( program, "viewPos" ), flatten(eyePos));
 	
 	//set texture
+	gl.uniform1i(gl.getUniformLocation(program, "u_useEnvMap"), useEnvMapping ? 1 : 0);
 	gl.activeTexture(gl.TEXTURE0);
 	gl.bindTexture(gl.TEXTURE_2D, cubeTexture);
     gl.uniform1i(gl.getUniformLocation(program, "diffuseTexture"), 0);
 	gl.activeTexture(gl.TEXTURE1);
 	gl.bindTexture(gl.TEXTURE_2D, depthTexture);
     gl.uniform1i(gl.getUniformLocation(program, "depthTexture"), 1);	
+	gl.activeTexture(gl.TEXTURE2);
+	gl.bindTexture(gl.TEXTURE_CUBE_MAP, cubeMap);
 	gl.drawArrays( gl.TRIANGLES, 0, cubenumPoints);
 	
 	var Translate = mat4(1, 0, 0, 0,
@@ -217,11 +227,12 @@ function render(){
 					0, 0, 1, 0,
 					0, 0, 0, 1);
 	var Scale =  mat4(2, 0, 0, 0,
-					0, 0.1, 0, 0,
-					0, 0, 2, 0,
-					0, 0, 0, 1);
+		0, 0.1, 0, 0,
+		0, 0, 2, 0,
+		0, 0, 0, 1);
 	ModelMatrix = mult(Translate, Scale);
 	gl.uniformMatrix4fv(gl.getUniformLocation(program,"u_ModelMatrix"), false, flatten(ModelMatrix));
+	gl.uniform1i(gl.getUniformLocation(program, "u_useEnvMap"), 0);
 	gl.activeTexture(gl.TEXTURE0);
 	gl.bindTexture(gl.TEXTURE_2D, planeTexture);
     gl.uniform1i(gl.getUniformLocation(program, "diffuseTexture"), 0);
@@ -241,6 +252,8 @@ function render(){
 	gl.useProgram(skyboxProgram);
 	gl.uniformMatrix4fv( gl.getUniformLocation(skyboxProgram,"u_ViewMatrix"), false, flatten(ViewMatrix));
     gl.uniformMatrix4fv( gl.getUniformLocation( skyboxProgram, "u_ProjectionMatrix" ),false, flatten(ProjectionMatrix));	
+	gl.activeTexture(gl.TEXTURE2);
+	gl.bindTexture(gl.TEXTURE_CUBE_MAP, cubeMap);
 	gl.drawArrays( gl.TRIANGLES, cubenumPoints + floornumPoints, skyboxnumPoints);//绘制立方体封闭网格，绘制天空盒，不动
 }
 
@@ -320,6 +333,9 @@ window.onkeydown = function(e){
 			break;
 		case 190: // >
 			eyeRadius += 1;
+			break;
+		case 69: // E-切换中心立方体是否使用环境映射
+			useEnvMapping = !useEnvMapping;
 			break;
 	}	     		
 
